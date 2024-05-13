@@ -6,10 +6,35 @@
 float relu(float x) {return x>0?x:0;}
 float dx_relu(float x){return x>0?1:0;}//x in this case is the output of relu, nasty way to do derivatives, but oh well.
 
+float tau = 2.f*3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342f;
+float pi  =     3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342f;
+
+
 float random_float()
 {
     static std::default_random_engine e;
     static std::uniform_real_distribution<> dis(0, 1); // range [0, 1)
+    return dis(e);
+}
+
+float random_radius()
+{
+    static std::default_random_engine e;
+    static std::uniform_real_distribution<> dis(.3, 1);
+    return dis(e);
+}
+
+float random_shift()
+{
+    static std::default_random_engine e;
+    static std::uniform_real_distribution<> dis(-.5, .5);
+    return dis(e);
+}
+
+float random_angle()
+{
+    static std::default_random_engine e;
+    static std::uniform_real_distribution<> dis(0, tau);
     return dis(e);
 }
 
@@ -453,9 +478,127 @@ struct LeNet{
 };
 
 
+void gen_circle( float arr[32][32] ){
+    
+    float radius = random_radius();
+    float x_shift = random_shift();
+    float y_shift = random_shift();
+    
+    for( int i = 0; i < 32; i++ ){
+        for( int j = 0; j < 32; j++ ){
+            
+            float x = 2.0*(i/31.0f - .5f)-x_shift;
+            float y = 2.0*(j/31.0f - .5f)-y_shift;
+            if( std::sqrt(x*x+y*y)<radius )
+                arr[i][j] = 1.0f;
+            else
+                arr[i][j] = 0.0f;
+        }
+    }
+    
+}
+
+void gen_triangle( float arr[32][32] ){
+    
+    float radius = random_radius();
+    float x_shift = random_shift();
+    float y_shift = random_shift();
+    //float rotation = random_angle();//I've given up on random rotations
+    
+    for( int i = 0; i < 32; i++ ){
+        for( int j = 0; j < 32; j++ ){
+            
+            float x = 2.0*(i/31.0f - .5f) - x_shift;
+            float y = 2.0*(j/31.0f - .5f) - y_shift;
+            
+            float angle = std::atan2(x,y);
+            float test_angle = 0;
+            float test_x = x, test_y = y;
+            
+            while( angle < 0 )
+                angle += tau;
+            while( angle > tau )
+                angle -= tau;
+            
+            
+            if( angle >= 5*pi/6 )
+                test_angle += 2*pi/3;
+            if( angle >= 3*pi/2 )
+                test_angle += 2*pi/3;
+            if( angle < pi/6 ) test_angle -= 2*pi/3;
+            
+            test_x = test_x*std::cos(test_angle) - test_y*std::sin(test_angle);
+            
+            
+            if( std::sqrt(x*x+y*y)<radius && test_x < .5*radius )
+                arr[i][j] = 1.0f;
+            else
+                arr[i][j] = 0.0f;
+        }
+    }
+    
+}
+
+void gen_square( float arr[32][32] ){
+    
+    float radius = random_radius();
+    float x_shift = random_shift();
+    float y_shift = random_shift();
+    //float rotation = random_angle();//I've given up on random rotations
+    
+    for( int i = 0; i < 32; i++ ){
+        for( int j = 0; j < 32; j++ ){
+            
+            float x = 2.0*(i/31.0f - .5f) - x_shift;
+            float y = 2.0*(j/31.0f - .5f) - y_shift;
+            
+            float angle = std::atan2(x,y);
+            float test_angle = 0;
+            float test_x = x, test_y = y;
+            
+            while( angle < 0 )
+                angle += tau;
+            while( angle > tau )
+                angle -= tau;
+            
+            
+            if( angle > 3*pi/4 )
+                test_angle += pi/2;
+            if( angle > 5*pi/4 )
+                test_angle += pi/2;
+            if( angle > 7*pi/4 )
+                test_angle += pi/2;
+            if( angle < 1*pi/4 )
+                test_angle -= pi/2;
+            
+            test_x = test_x*std::cos(test_angle) - test_y*std::sin(test_angle);
+            
+            
+            if( std::sqrt(x*x+y*y)<radius && test_x < std::sqrt(2)/2*radius )
+                arr[i][j] = 1.0f;
+            else
+                arr[i][j] = 0.0f;
+        }
+    }
+    
+}
 
 
 int main(int argc, char** argv){
+    
+    float arr[32][32];
+    
+    for( int k = 0; k < 5; k++ ){
+        gen_square( arr );
+        
+        for( int i = 0; i < 32; i++ ){
+            for( int j = 0; j < 32; j++ ){
+                std::cout << bool(arr[i][j]);
+            }std::cout << std::endl;
+        }std::cout << std::endl;
+    }
+    return 0;
+    
     
     float input[32][32];
     for( int i = 0; i < 32; i++ ){
